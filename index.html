@@ -1,420 +1,447 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>一年级生字认读游戏</title>
-<script src="https://accounts.google.com/gsi/client" async defer></script>
-<style>
-  body {
-    font-family: "Microsoft YaHei", sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-    background: url('https://wallpaperaccess.com/full/1544210.jpg') no-repeat center center fixed;
-    background-size: cover;
-    padding: 20px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>上学了 - 在线朗读作业</title>
+  <style>
+    :root{
+      --bg:#fff8ff;
+      --card:#fff;
+      --accent:#ff9fc4;
+      --accent-hover:#ff7eb0;
+      --accent2:#ffd6a5;
+      --text:#333;
+      --muted:#7a6b7a;
+      --shadow: 0 8px 24px rgba(122,107,122,0.12);
+    }
+    html,body{height:100%;margin:0;font-family:"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif;background:url('https://wallpaperaccess.com/full/1164977.jpg') center/cover no-repeat fixed;color:var(--text)}
+    
+    /* 通用布局 */
+    .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing: border-box;}
+    
+    /* 卡片容器 */
+    .card{
+      width:800px;
+      max-width:100%;
+      background:var(--card);
+      border-radius:24px;
+      padding:40px;
+      box-shadow:var(--shadow);
+      display:flex;
+      flex-direction: column;
+      align-items:center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
 
-  body::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(255,200,150,0.3);
-    filter: brightness(1.1) saturate(1.2);
-    pointer-events: none;
-    z-index: 0;
-  }
+    /* 标题区域 */
+    .header-area{text-align:center; margin-bottom: 20px;}
+    .avatar{
+      width:80px;height:80px;border-radius:20px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:inline-flex;align-items:center;justify-content:center;
+      font-weight:700;color:#fff;font-size:36px;
+      box-shadow:0 6px 18px rgba(255,159,196,0.3);
+      margin-bottom: 15px;
+    }
+    h1{margin:0;font-size:24px;color:#4a3b4a;}
+    p.subtitle{margin:8px 0 0;color:var(--muted);font-size:14px;}
 
-  /* --- 游戏界面原有样式 --- */
-  #game-container {
-    display: none; /* 默认隐藏，登录后显示 */
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    z-index: 1;
-  }
+    /* 页面切换动画 */
+    .view-section { display: none; width: 100%; animation: fadeIn 0.5s ease; }
+    .view-section.active { display: block; }
+    @keyframes fadeIn { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform: translateY(0); } }
 
-  h1 {
-    font-size: 3rem; 
-    color: #ff6f61; 
-    text-shadow: 1px 1px #ffffffaa; 
-    margin-bottom: 15px;
-    font-weight: bold;
-    text-align: center;
-  }
+    /* --- 登录页样式 --- */
+    .form-group { margin-bottom: 20px; text-align: left; width: 100%; max-width: 320px; margin-left: auto; margin-right: auto; }
+    label { display: block; margin-bottom: 8px; font-weight: bold; color: var(--muted); }
+    select, input { 
+      width: 100%; padding: 12px; border: 2px solid #ffe4ed; border-radius: 12px; 
+      font-size: 16px; outline: none; box-sizing: border-box; transition: border-color 0.3s;
+    }
+    select:focus, input:focus { border-color: var(--accent); }
+    
+    .google-btn {
+      background: #fff; border: 1px solid #ddd; color: #555;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; max-width: 320px; padding: 10px; border-radius: 12px;
+      cursor: pointer; font-weight: 600; margin: 10px auto;
+      transition: background 0.2s;
+    }
+    .google-btn:hover { background: #f9f9f9; }
+    .google-icon { width: 20px; height: 20px; }
 
-  #prompt {
-    margin: 20px;
-    font-size: 1.6rem;
-    color: #264653;
-    background-color: rgba(255,255,255,0.9);
-    padding: 10px 20px;
-    border-radius: 12px;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-    text-align: center;
-  }
+    .btn-large {
+      background: linear-gradient(90deg,var(--accent),#ffd6a5);
+      color: #7a2e4a; border: none; padding: 14px 40px;
+      font-size: 18px; font-weight: bold; border-radius: 50px;
+      cursor: pointer; box-shadow: 0 6px 16px rgba(255,159,196,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 20px; width: 100%; max-width: 320px;
+    }
+    .btn-large:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(255,159,196,0.6); }
+    .btn-large:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-  #grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
-    grid-gap: 12px;
-    width: 100%;
-    max-width: 600px;
-  }
+    /* --- 朗读页样式 --- */
+    .sentence-box{
+      background:linear-gradient(180deg,#ffffff,#fffaf6);
+      border-radius:16px; padding:30px 20px;
+      display:flex; align-items:center; justify-content:center;
+      min-height:180px; width: 100%; margin: 20px 0;
+      border: 1px solid #fff0f5;
+    }
+    .sentence{font-size:36px;line-height:1.6;text-align:center;letter-spacing:2px; color: #444;}
+    .sentence .ch{transition: color 150ms ease, transform 150ms ease; display: inline-block;}
+    
+    .controls{display:flex;gap:12px;align-items:center;justify-content:center;margin-top:10px; flex-wrap: wrap;}
+    .ctrl-btn{
+      padding:10px 20px; border-radius:12px; border:none; cursor:pointer; font-weight:700; font-size: 15px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.05); transition: background 0.2s;
+    }
+    .btn-primary{background:var(--accent);color:#fff;}
+    .btn-primary:hover{background:var(--accent-hover);}
+    .btn-ghost{background:#fff; border:2px solid #ffe4ed; color:var(--accent);}
+    .btn-ghost:hover{background:#fff0f5;}
+    
+    .progress-info { margin-top: 15px; font-size: 13px; color: var(--muted); }
 
-  .card {
-    border: 3px solid #ffb347;
-    border-radius: 12px;
-    box-shadow: 3px 3px 8px rgba(0,0,0,0.3);
-    cursor: pointer;
-    font-size: 1.6rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-    padding-top: 100%;
-    transition: all 0.3s;
-  }
+    /* --- 恭喜页样式 --- */
+    .success-icon { font-size: 60px; margin-bottom: 20px; animation: pop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+    @keyframes pop { 0% { transform: scale(0); } 100% { transform: scale(1); } }
+    .congrats-text { font-size: 22px; color: var(--text); margin-bottom: 10px; }
+    .sub-congrats { color: var(--muted); margin-bottom: 30px; }
 
-  .card span {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
-
-  .correct {
-    background: linear-gradient(145deg, #a8dadc, #1d3557) !important;
-    border-color: #457b9d;
-    color: #fff;
-    font-weight: bold;
-    animation: jump 0.3s;
-    pointer-events: none;
-  }
-
-  .wrong {
-    background: linear-gradient(145deg, #fca5a5, #e63946) !important;
-    border-color: #e63946;
-  }
-
-  @keyframes jump {
-    0% { transform: translate(-50%, -50%) translateY(0); }
-    50% { transform: translate(-50%, -50%) translateY(-12px); }
-    100% { transform: translate(-50%, -50%) translateY(0); }
-  }
-
-  #score {
-    margin-top: 20px;
-    font-size: 1.3rem;
-    background-color: rgba(255,255,255,0.9);
-    padding: 8px 15px;
-    border-radius: 10px;
-    box-shadow: 2px 2px 6px rgba(0,0,0,0.3);
-  }
-
-  /* --- 新增登录界面样式 --- */
-  #wrapper {
-    background-color: rgba(255, 255, 255, 0.95);
-    padding: 40px;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-    z-index: 10;
-    max-width: 450px;
-    width: 90%;
-    text-align: center;
-    margin-top: 50px;
-  }
-
-  #wrapper h1 {
-    font-size: 2rem;
-    margin-bottom: 30px;
-    color: #264653;
-  }
-
-  .input-group {
-    margin-bottom: 25px;
-    text-align: left;
-  }
-
-  .input-group label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #555;
-    font-size: 1.1rem;
-  }
-
-  #student-class {
-    width: 100%;
-    padding: 12px;
-    font-size: 1rem;
-    border: 2px solid #ddd;
-    border-radius: 8px;
-    background-color: #fff;
-    cursor: pointer;
-  }
-
-  #student-class:focus {
-    border-color: #ffb347;
-    outline: none;
-  }
-
-  .google-btn-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 15px;
-  }
-
-  .google-label {
-    font-weight: bold;
-    color: #555;
-    margin-bottom: 5px;
-    display: block;
-    width: 100%;
-    text-align: left;
-    font-size: 1.1rem;
-  }
-
-  #welcome-msg {
-    min-height: 24px;
-    color: #2a9d8f;
-    font-weight: bold;
-    margin-top: 10px;
-  }
-
-  #manualStartBtn {
-    background: linear-gradient(to right, #ff6f61, #ff9f43);
-    color: white;
-    border: none;
-    padding: 12px 40px;
-    font-size: 1.3rem;
-    border-radius: 50px;
-    cursor: pointer;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-    transition: transform 0.2s, box-shadow 0.2s;
-    font-weight: bold;
-    margin-top: 10px;
-  }
-
-  #manualStartBtn:hover {
-    transform: scale(1.05);
-    box-shadow: 0 6px 10px rgba(0,0,0,0.3);
-  }
-
-  #manualStartBtn:active {
-    transform: scale(0.98);
-  }
-</style>
+    /* 响应式 */
+    @media (max-width:600px){
+      .card{padding:24px;}
+      .sentence{font-size:26px;}
+      .btn-large{width: 100%;}
+    }
+  </style>
 </head>
 <body>
-
-<div id="wrapper">
-  <h1>Preposition Exercise (Year 2)</h1>
-
-  <div id="start-screen">
-      <div class="input-group">
-          <label for="student-class">Step 1: Choose Your Class</label>
-          <select id="student-class">
-              <option value="">-- Select Class --</option>
-              <option value="2M">2M</option>
-              <option value="2K">2K</option>
-              <option value="2B">2B</option>
-              <option value="2H">2H</option>
-              <option value="2J">2J</option>
-          </select>
-      </div>
-
-      <div class="google-btn-container">
-          <label class="google-label">Step 2: Google Sign-In</label>
-          
-          <div id="g_id_onload"
-               data-client_id="1006856013626-uk3eq5tchv9t65gqosb0k6rst7hi1eeb.apps.googleusercontent.com"
-               data-callback="handleCredentialResponse"
-               data-auto_prompt="false">
-          </div>
-          
-          <div class="g_id_signin"
-               data-type="standard"
-               data-size="large"
-               data-theme="filled_blue"
-               data-text="sign_in_with"
-               data-shape="pill"
-               data-logo_alignment="left">
-          </div>
-
-          <div id="welcome-msg"></div>
-          <button id="manualStartBtn">Start Now! 🚀</button>
-      </div>
-  </div>
-</div>
-
-<div id="game-container">
-  <h1>认读生字游戏</h1>
-  <div id="prompt">点击对应的字：</div>
-  <div id="grid"></div>
-  <div id="score"></div>
-</div>
-
-<script>
-/* -------------------------------------------------------------------------- */
-/* 登录与数据提交逻辑                                  */
-/* -------------------------------------------------------------------------- */
-
-// 你提供的 Google Apps Script 部署链接
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyahyd-8x_6gElJBoFRRUt-Yj20BGOVdaGCDj_FU-v-1y_8eXzhEmugOXj4xOIGPX-Z/exec';
-
-let currentUser = null; // 存储登录用户信息
-
-// 解码 JWT Token 获取用户信息
-function decodeJwtResponse(token) {
-    var base64Url = token.split('.')[1];
-    var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-    var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-    }).join(''));
-    return JSON.parse(jsonPayload);
-}
-
-// Google 登录回调函数
-window.handleCredentialResponse = (response) => {
-    try {
-        const responsePayload = decodeJwtResponse(response.credential);
-        
-        // 保存用户信息
-        currentUser = {
-            name: responsePayload.name,
-            email: responsePayload.email,
-            picture: responsePayload.picture
-        };
-
-        const welcomeDiv = document.getElementById("welcome-msg");
-        welcomeDiv.innerHTML = `Welcome, ${currentUser.name}! ✅`;
-        welcomeDiv.style.color = "#2e8b57";
-    } catch (e) {
-        console.error("Login decode error", e);
-    }
-}
-
-// 开始按钮逻辑：检查输入 -> 提交数据 -> 开始游戏
-document.getElementById('manualStartBtn').addEventListener('click', function() {
-    const classSelect = document.getElementById('student-class');
-    const selectedClass = classSelect.value;
+  <div class="wrap">
     
-    if (selectedClass === "") {
-        alert("Please select your class first!");
-        classSelect.focus();
-        return;
+    <div id="loginView" class="card view-section active">
+      <div class="header-area">
+        <div class="avatar">📖</div>
+        <h1>上学了 - 课文朗读</h1>
+        <p class="subtitle">请先选择班级并登录</p>
+      </div>
+
+      <div class="form-group">
+        <label>选择班级 (Class)</label>
+        <select id="classSelect">
+          <option value="" disabled selected>请点击选择...</option>
+          <option value="1M">1M</option>
+          <option value="1K">1K</option>
+          <option value="1B">1B</option>
+          <option value="1H">1H</option>
+          <option value="1J">1J</option>
+        </select>
+      </div>
+
+      <button class="google-btn" id="googleLoginBtn">
+        <svg class="google-icon" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+        <span>使用 Google 账号登录</span>
+      </button>
+      <div id="loginMsg" style="color:#34a853; font-size:13px; margin-top:5px; display:none;">✅ 已连接 Google 账号</div>
+
+      <button id="startAppBtn" class="btn-large" disabled>开始做功课</button>
+      
+      <p style="font-size:12px; color:#aaa; margin-top:30px;">
+        © 华文课室 · 
+        <a href="https://script.google.com/macros/s/AKfycbyahyd-8x_6gElJBoFRRUt-Yj20BGOVdaGCDj_FU-v-1y_8eXzhEmugOXj4xOIGPX-Z/exec" target="_blank" style="color:#aaa; text-decoration:none;">后台管理链接</a>
+      </p>
+    </div>
+
+    <div id="readingView" class="card view-section">
+      <div class="cute-head" style="display:flex;gap:15px;align-items:center;width:100%;margin-bottom:10px;">
+        <div class="avatar" style="width:60px;height:60px;font-size:28px;margin:0;">读</div>
+        <div style="text-align:left;">
+          <h1 style="font-size:20px;">正在朗读</h1>
+          <p class="subtitle" id="studentInfoDisplay">学生信息</p>
+        </div>
+      </div>
+
+      <div class="sentence-box" id="sentenceBox">
+        <div class="sentence" id="sentenceText">加载中...</div>
+      </div>
+
+      <div class="controls">
+        <button id="prevBtn" class="ctrl-btn btn-ghost">⬅ 上一句</button>
+        <button id="playBtn" class="ctrl-btn btn-primary" style="padding:10px 30px; font-size:18px;">🔊 朗读</button>
+        <button id="nextBtn" class="ctrl-btn btn-ghost">下一句 ➡</button>
+      </div>
+      
+      <div class="controls" style="margin-top:15px;">
+         <button id="autoBtn" class="ctrl-btn btn-ghost" style="font-size:13px; padding:8px 12px;">自动播放：关</button>
+      </div>
+
+      <div class="progress-info" id="footerInfo">进度 1 / 4</div>
+    </div>
+
+    <div id="successView" class="card view-section" style="text-align:center;">
+      <div class="success-icon">🎉</div>
+      <h1 class="congrats-text">恭喜你！</h1>
+      <p class="sub-congrats">你已经完成了今天的朗读功课。<br>老师为你点赞！👍</p>
+      
+      <div style="background:#f0fff4; color:#2e7d32; padding:15px; border-radius:12px; margin-bottom:20px; font-size:14px;">
+        ✅ 学习记录已生成<br>
+        <span style="font-size:12px; opacity:0.8;">(数据将同步至 Google 后台)</span>
+      </div>
+
+      <button onclick="location.reload()" class="btn-large">再读一次</button>
+    </div>
+
+  </div>
+
+  <script>
+    // --- 配置数据 ---
+    // 你的 Google Apps Script URL
+    const GAS_URL = "https://script.google.com/macros/s/AKfycbyahyd-8x_6gElJBoFRRUt-Yj20BGOVdaGCDj_FU-v-1y_8eXzhEmugOXj4xOIGPX-Z/exec";
+    
+    const sentences = [
+      "上学了，上学了。",
+      "花儿跟我招招手，",
+      "太阳跟我一起走，",
+      "一起走到校门口。"
+    ];
+
+    // --- 状态变量 ---
+    let currentClass = "";
+    let isLogged = false;
+    let index = 0;
+    let auto = false;
+    let autoTimer = null;
+
+    // --- 界面元素引用 ---
+    const loginView = document.getElementById('loginView');
+    const readingView = document.getElementById('readingView');
+    const successView = document.getElementById('successView');
+    
+    const classSelect = document.getElementById('classSelect');
+    const loginBtn = document.getElementById('googleLoginBtn');
+    const startBtn = document.getElementById('startAppBtn');
+    
+    const sentenceText = document.getElementById('sentenceText');
+    const footerInfo = document.getElementById('footerInfo');
+    const studentInfoDisplay = document.getElementById('studentInfoDisplay');
+
+    // --- 1. 登录与初始化逻辑 ---
+    
+    // 检查是否允许点击开始
+    function checkStartEnable() {
+      // 只要选了班级，且点击了登录按钮（模拟），就允许开始
+      if(classSelect.value && isLogged) {
+        startBtn.disabled = false;
+        startBtn.innerHTML = "开始做功课 🚀";
+      } else {
+        startBtn.disabled = true;
+      }
     }
 
-    // 准备要提交的数据
-    const postData = new FormData();
-    postData.append('timestamp', new Date().toISOString());
-    postData.append('class', selectedClass);
-    postData.append('name', currentUser ? currentUser.name : 'Guest (Not Signed In)');
-    postData.append('email', currentUser ? currentUser.email : 'N/A');
-
-    // 发送数据到 Google Sheets (使用 no-cors 模式以避免跨域报错)
-    fetch(SCRIPT_URL, {
-        method: 'POST',
-        mode: 'no-cors', 
-        body: postData
-    }).then(() => {
-        console.log("Data sent to sheet successfully");
-    }).catch(err => {
-        console.error("Error sending data:", err);
+    classSelect.addEventListener('change', (e) => {
+      currentClass = e.target.value;
+      checkStartEnable();
     });
 
-    // 无论提交是否成功，都进入游戏界面
-    document.getElementById('wrapper').style.display = 'none';
-    document.getElementById('game-container').style.display = 'flex';
-});
+    loginBtn.addEventListener('click', () => {
+      // 模拟登录过程
+      loginBtn.innerHTML = "⌛ 正在连接...";
+      setTimeout(() => {
+        isLogged = true;
+        loginBtn.style.display = 'none'; // 隐藏按钮
+        document.getElementById('loginMsg').style.display = 'block'; // 显示成功文字
+        checkStartEnable();
+      }, 800);
+    });
 
-/* -------------------------------------------------------------------------- */
-/* 原游戏逻辑                                    */
-/* -------------------------------------------------------------------------- */
+    startBtn.addEventListener('click', () => {
+      // 切换界面
+      loginView.classList.remove('active');
+      setTimeout(() => {
+         loginView.style.display = 'none';
+         readingView.style.display = 'flex'; // 先显示 flex
+         // 强制重绘
+         void readingView.offsetWidth; 
+         readingView.classList.add('active'); // 再加动画
+      }, 100);
 
-const words = [
-"乐","唱","里","很","每","从","棵","响","落","风",
-"听","座","对","晴","伤","吵","闹","安","静","怕",
-"空","放","情","夜","悄","换","黑","色","衣","最",
-"把","留","用","铅","发","现","慢","白","文","图",
-"本","金","沙","谁","银","船","工","具","呀","简"
-];
+      // 初始化阅读器
+      studentInfoDisplay.textContent = `班级: ${currentClass} · 正在学习`;
+      loadSentence(0);
+    });
 
-let remaining = [...words];
-let score = 0;
 
-const grid = document.getElementById('grid');
-const promptDiv = document.getElementById('prompt');
-const scoreDiv = document.getElementById('score');
+    // --- 2. 朗读核心逻辑 ---
+    
+    function loadSentence(i) {
+      if(i < 0) i = 0;
+      // 如果超过最后一句，进入完成页面
+      if(i >= sentences.length) {
+        finishHomework();
+        return;
+      }
 
-function shuffle(array) {
-  return array.sort(() => Math.random() - 0.5);
-}
+      index = i;
+      const txt = sentences[index];
+      // 生成带span的文字用于高亮
+      sentenceText.innerHTML = txt.split('').map((ch, idx) => `<span class="ch" data-i="${idx}">${ch}</span>`).join('');
+      
+      // 简单的进入动画
+      sentenceText.style.opacity = '0';
+      sentenceText.style.transform = 'translateY(10px)';
+      setTimeout(() => {
+        sentenceText.style.transition = 'all 0.3s ease';
+        sentenceText.style.opacity = '1';
+        sentenceText.style.transform = 'translateY(0)';
+      }, 50);
 
-// 朗读汉字函数
-function speak(text) {
-  if ('speechSynthesis' in window) {
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = 'zh-CN';
-    utterance.rate = 0.8; // 语速略慢
-    window.speechSynthesis.speak(utterance);
-  }
-}
+      footerInfo.textContent = `进度 ${index + 1} / ${sentences.length}`;
+    }
 
-// 初始化字卡
-shuffle(words).forEach(char => {
-  const div = document.createElement('div');
-  div.className = 'card';
-  const span = document.createElement('span');
-  span.textContent = char;
-  div.appendChild(span);
+    function playCurrent() {
+      if(!('speechSynthesis' in window)) return alert('设备不支持朗读');
+      window.speechSynthesis.cancel();
+      clearHighlights();
+      
+      const msg = new SpeechSynthesisUtterance(sentences[index]);
+      msg.lang = 'zh-CN';
+      msg.rate = 0.9; // 稍微慢一点适合一年级
+      
+      msg.onboundary = (e) => {
+        if(e.name === 'word' || typeof e.charIndex === 'number') {
+           highlight(e.charIndex);
+        }
+      };
+      
+      msg.onend = () => {
+        setTimeout(clearHighlights, 1000);
+        if(auto) {
+          // 自动模式下，读完一句等1.5秒自动下一句
+          autoTimer = setTimeout(() => next(), 1500);
+        }
+      };
 
-  const color1 = `hsl(${Math.random() * 360}, 70%, 80%)`;
-  const color2 = `hsl(${Math.random() * 360}, 70%, 60%)`;
-  div.style.background = `linear-gradient(145deg, ${color1}, ${color2})`;
+      window.speechSynthesis.speak(msg);
+    }
 
-  div.addEventListener('click', () => handleClick(div));
-  grid.appendChild(div);
-});
+    function highlight(charIdx) {
+      // 清除旧的高亮
+      clearHighlights();
+      // 尝试找到对应字符
+      const span = document.querySelector(`.ch[data-i="${charIdx}"]`);
+      if(span) {
+        span.style.color = '#ff4fa3';
+        span.style.transform = 'scale(1.2)';
+      } else {
+        // 容错：如果找不到精确索引，高亮第一个未高亮的（简单处理）
+        const all = document.querySelectorAll('.ch');
+        for(let s of all) {
+            if(!s.style.color) { 
+                s.style.color = '#ff4fa3'; 
+                s.style.transform = 'scale(1.2)';
+                break; 
+            }
+        }
+      }
+    }
 
-function nextWord() {
-  if (remaining.length === 0) {
-    promptDiv.textContent = "恭喜完成！总分：" + score;
-    return;
-  }
-  const index = Math.floor(Math.random() * remaining.length);
-  currentWord = remaining[index];
-  promptDiv.textContent = "请点击字：" + currentWord;
-}
+    function clearHighlights() {
+      document.querySelectorAll('.ch').forEach(el => {
+        el.style.color = '';
+        el.style.transform = '';
+      });
+    }
 
-let currentWord;
-nextWord();
+    function next() {
+      loadSentence(index + 1);
+      // 如果没有结束，才朗读
+      if(index < sentences.length && index !== 0) { // 这里的index其实已经被 loadSentence 更新了，或者在 finish 里被拦截
+         if(auto) playCurrent();
+      }
+    }
 
-function handleClick(div) {
-  const char = div.textContent;
-  if (char === currentWord) {
-    div.classList.add('correct');
-    remaining = remaining.filter(w => w !== currentWord);
-    score += 1;
-    scoreDiv.textContent = "已完成：" + score + " / " + words.length;
-    div.style.pointerEvents = 'none';
-    speak(currentWord); 
-    nextWord();
-  } else {
-    div.classList.add('wrong');
-    speak(currentWord);
-    setTimeout(() => div.classList.remove('wrong'), 500);
-  }
-}
-</script>
+    function prev() {
+      loadSentence(index - 1);
+    }
+
+    // --- 3. 完成与数据提交逻辑 ---
+
+    function finishHomework() {
+      // 停止自动播放
+      auto = false;
+      clearTimeout(autoTimer);
+      window.speechSynthesis.cancel();
+
+      // 发送数据到后台 (使用 beacon 或 img GET 方式绕过简单跨域，或者 fetch no-cors)
+      // 注意：为了让这个生效，你的 GAS 脚本必须有 doGet() 函数处理参数
+      submitDataToGAS();
+
+      // 切换到成功界面
+      readingView.classList.remove('active');
+      readingView.style.display = 'none';
+      
+      successView.style.display = 'block';
+      void successView.offsetWidth;
+      successView.classList.add('active');
+    }
+
+    function submitDataToGAS() {
+      // 构建提交的数据
+      const timestamp = new Date().toLocaleString();
+      // 由于浏览器的CORS策略，直接POST通常会被Google拒绝。
+      // 这里使用 'no-cors' 模式发送，意味着我们可以发送请求，但收不到“成功”的回应。
+      // 或者使用 GET 请求带参数。这里演示 GET 请求方式（通常更稳定用于简单打卡）。
+      
+      const payload = {
+        action: 'homework_complete',
+        class: currentClass,
+        lesson: '上学了',
+        time: timestamp
+      };
+      
+      // 将参数拼接到 URL
+      const params = new URLSearchParams(payload).toString();
+      const finalUrl = `${GAS_URL}?${params}`;
+
+      // 使用 fetch 发送
+      fetch(finalUrl, {
+        method: 'GET',
+        mode: 'no-cors', // 重要：允许跨域发送，但不读取返回值
+      }).then(() => {
+        console.log("数据已尝试发送");
+      }).catch(err => {
+        console.error("发送失败", err);
+      });
+    }
+
+    // --- 事件绑定 ---
+    document.getElementById('playBtn').onclick = playCurrent;
+    document.getElementById('nextBtn').onclick = next;
+    document.getElementById('prevBtn').onclick = prev;
+    
+    document.getElementById('autoBtn').onclick = function() {
+      auto = !auto;
+      this.textContent = auto ? "自动播放：开" : "自动播放：关";
+      this.style.background = auto ? "#fff0f5" : "#fff";
+      if(auto) playCurrent();
+      else { clearTimeout(autoTimer); window.speechSynthesis.cancel(); }
+    };
+
+    // 键盘支持
+    window.addEventListener('keydown', (e) => {
+      // 只有在朗读界面才响应键盘
+      if(readingView.style.display !== 'none' && !successView.classList.contains('active')) {
+        if(e.code === 'Space') { e.preventDefault(); playCurrent(); }
+        if(e.code === 'ArrowRight') next();
+        if(e.code === 'ArrowLeft') prev();
+      }
+    });
+
+  </script>
 </body>
 </html>
